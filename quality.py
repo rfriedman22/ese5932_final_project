@@ -29,7 +29,6 @@ datasets = [(os.path.join(results_dir,"reconstructionFullReconstruction.txt")),
 
 for i in range(0,len(datasets)):
     image_recon = np.loadtxt(datasets[i]);
-    plt.imshow(image_recon, cmap = 'gray')
     ssim_array.append(ssim(original_image, image_recon, data_range = original_image.max() - original_image.min()))
     psnr_array.append(psnr(original_image, image_recon, data_range = original_image.max() - original_image.min()))
     mse_array.append(mse(original_image, image_recon))
