@@ -18,15 +18,15 @@ datasets = [
     (os.path.join(data_dir, "Sinogram90.mat"),
         "sinogram90",
         os.path.join(data_dir, "A90.mat"),
-        os.path.join(results_dir, "reconstruction90")),
+        os.path.join(results_dir, "sart90")),
     (os.path.join(data_dir, "Sinogram270.mat"),
         "sinogram270",
         os.path.join(data_dir, "A270.mat"),
-        os.path.join(results_dir, "reconstruction270")),
+        os.path.join(results_dir, "sart270")),
     (os.path.join(data_dir, "project_data.mat"),
         "sinogram",
         os.path.join(data_dir, "A.mat"),
-        os.path.join(results_dir, "reconstructionFull")),
+        os.path.join(results_dir, "sartFull")),
 ]
 
 n_pixels = 256
@@ -42,13 +42,14 @@ for sinogram, name, operator, out_prefix in datasets:
     operator = operator.tocsr()
 
     model_init = np.zeros(n_pixels**2)
-    model, residual_norms, fig = sart.sart(operator, sinogram, model_init, plot_convergence=f"{out_prefix}Residuals")
+    model, residual_norms, fig = sart.sart(operator, sinogram, model_init, plot_convergence=f"{out_prefix}Residuals", max_iter=200)
     # Show the convergence history
     plt.show(fig)
     # Show the reconstructed image
     fig, ax = plt.subplots()
-    ax.imshow(model, cmap="Greys")
+    ax.imshow(model, cmap="gray")
+    fig.savefig(f"{out_prefix}Image.png")
     plt.show(fig)
 
     # Save the reconstruction to file
-    np.savetxt(f"{out_prefix}Reconstruction.txt", model, fmt="%.2f", delimiter="\t", newline="\n")
+    np.savetxt(f"{out_prefix}Reconstruction.txt", model, delimiter="\t", newline="\n")
