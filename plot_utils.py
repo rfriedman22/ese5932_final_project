@@ -11,7 +11,7 @@ def set_presentation_params():
     mpl.rcParams["ytick.labelsize"] = 60
     mpl.rcParams["legend.fontsize"] = 60
     mpl.rcParams["figure.figsize"] = (25, 25)
-    mpl.rcParams["image.cmap"] = "viridis"
+    mpl.rcParams["image.cmap"] = "gray"
     mpl.rcParams["lines.markersize"] = 14
     mpl.rcParams["lines.linewidth"] = 15
     mpl.rcParams["font.size"] = 60
@@ -31,7 +31,7 @@ def set_print_params():
     mpl.rcParams["ytick.labelsize"] = 15
     mpl.rcParams["legend.fontsize"] = 15
     mpl.rcParams["figure.figsize"] = (8, 8)
-    mpl.rcParams["image.cmap"] = "viridis"
+    mpl.rcParams["image.cmap"] = "gray"
     mpl.rcParams["lines.markersize"] = 5
     mpl.rcParams["lines.linewidth"] = 3
     mpl.rcParams["font.size"] = 15
