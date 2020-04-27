@@ -132,9 +132,9 @@ $\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an anistropic 
     \BState \emph{Backward}
     \State $x_i = x_f - \frac{1}{\lambda} \div x_f$
     \State $obj = \frac{1}{2}||x_f -x_i ||^2 + \lambda ||\nabla x_i||^2$
-    \State $tol_i = \frac{|tol_{i-1} - tol_i|}{tol_i}$
+    \State $tol_i = \frac{|obj_{i-1} - obj_i|}{obj_i}$
     \BState \emph{Update projector}
-    \State $r_i = r - \frac{1}{4 \lambda} \div x_i$
+    \State $r_i = r - \frac{1}{4 \lambda} \nabla x_i$
     \BState \emph{FISTA}
     \State $t_{i+1} = \frac{1 + \sqrt{1 + 4 t_{i}^2}}{2}$
     \State $p_i = \frac{r_1}{\text{max}\{1, p_i\}}$
