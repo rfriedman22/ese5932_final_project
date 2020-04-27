@@ -1,0 +1,157 @@
+\documentclass[12pt]{article}
+%\usepackage[latin1]{inputenc}
+\usepackage{pdfsync}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{latexsym}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{eucal}
+\usepackage{indentfirst}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsfonts}
+\usepackage{natbib}
+\usepackage{sidecap}
+\usepackage{subfigure}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{gensymb}
+\usepackage{color}
+\usepackage{wrapfig}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage[titletoc]{appendix}
+\usepackage{soul}
+\usepackage{pythontex}
+%\usepackage{ulem}
+\usepackage[body={9.0in, 9.0in},left=1 in,right=1in]{geometry} % Geometry package for easy page margin setup\setcounter{MaxMatrixCols}{30}
+\linespread{1} % interline
+\DeclareGraphicsExtensions{.jpg,.pdf,.mps,.png,.eps}
+ 
+
+%%%%%%%%%%%%%Colors%%%%%%%%%%%%%%%
+\usepackage[dvispnames]{xcolor}
+\definecolor{pink}{cmyk}{0, 0.7808, 0.4429, 0.1412}
+%%%%%%%%%%%%% Page setup %%%%%%%%%%
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+%\lhead{\footnotesize \parbox{11cm}{Draft 1} }
+\lfoot{\footnotesize Siqi Zhao\\ szhao@wustl.edu}
+%\cfoot{}
+%\chead{}
+%\rhead{\footnotesize 3}
+\rfoot{\footnotesize Page \thepage\ of \pageref{LastPage}}
+\newcommand{\noin}{\noindent} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{pythonhighlight}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
+\usepackage{physics}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+\section{Methods}
+
+\noin Given the several sources of noise for computed tomography\cite{Duan2013-mi}, such as electronic noise and structural noise, the reconstruction of the CT image is indeed an ill-posed problem. To solve this inverse problem, we formulate the CT image reconstruction as an optimization problem. One of the important considerations for formulating this optimization problem is to find a regularization method that preserves the edges in the true image since identifying boundaries of objects (such as the boundary between normal and abnormal tissues) has high diagnostic value.
+
+\vspace{0.2in}
+
+\noin We decided to follow the fast gradient-based algorithm proposed by Beck and Teboulle \cite{Beck2009-id}, and the following section will discuss the specific implementation of their method for CT image reconstruction. Specifically, we chose the anisotropic TV regularization functional. While anisotropic TV is known to favor horizontal and vertical structures for 2D images\cite{Condat2017-uj}, it simplifies some of the implementation of the algorithm. So the anisotropic TV is implemented as the first path, and the reconstruction quality is good. A decision is made not to implement the isotropic TV functional. 
+
+\vspace{0.2in}
+
+\noin Hence the optimization problem can be formulated as:
+\begin{align}
+ \underset{x}{min}\{ ||A(x) - d||^2 + 2 \lambda\text{TV}(x)\} \label{eq1}
+\end{align}
+
+\noin where
+$x \in \mathbb{R}^{m \times 1}$ is the flattened true image with the size $\sqrt{m \times 1}$.
+$d \in \mathbb{R}^n$ is the flattened sinogram image with the size $\sqrt{n \times 1}$.
+$A \in \mathbb{R}^{m \times n}$ is the forward operator that transforms an image to a sinogram image.
+$\lambda$ is the regularization parameter. 
+$\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an anistropic total variation functional, where 
+\begin{align}
+    x \in \mathbb{R}^{m\times 1}, \text{TV}(x) = \sum_{i=1}^{m-1}{|x_i - x_{i+1}|} 
+\end{align}
+
+\noin To solve the problem in eq.\ref{eq1}, it requires a method that sovles non-differentiable optimization problems. As discussed in \cite{Beck2009-id}, the gradient projection method is particularly suited for this task because of the faster convergence rate compare to other methods such as primal-dual Newton-based methods\cite{Chan1996-mt}. The specific innovation of \cite{Beck2009-id} is a new proximal gradient method called fast iterative shrinkage/thresholding algorithm (FISTA), which has a global convergence rate of $\mathcal{O}(\frac{1}{k^2})$ (The proof of convergence rate is detailed in \cite{Beck2009-id}). 
+
+\vspace{0.2in}
+
+\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. The first key insight is to apply a orthogonal projection operator on $\text{P}_C$, which is a box projection that maps $x$ onto a feasible set (which can change in each iteration). As discussed in \cite{Beck2009-id}, the solution is
+\begin{align}
+    x_k = \text{P}_C(x_{k-1} - t_k\nabla f(x_{k-1}))
+\end{align}
+
+\noin where $f$ denotes the data fidelity term.
+
+\vspace{0.2in}
+
+\noin The next step is to construct the proximal map. Let $\mathcal{P}_1$ denote the set of all pairs of matrices $(\mathbf{p}, \mathbf{q})$. Note that for our special case where $x \in \mathbb{R}^{m \times 1}$, $\mathcal{P}_1$ becomes matrices $\mathbf{p}$ satisfying
+\begin{align}
+    |p_i| \leq 1, i = 1,\cdots,m-1
+\end{align}
+
+\noin Following \emph{Proposition 4.1} in \cite{Beck2009-id}, we can write out the objective function as 
+\begin{align}
+\underset{\mathbf{p} \in \mathcal{P}}{max} \underset{x \in \text{C}}{min}\{||x-d|||_\text{F}^2 + 2\lambda\text{Tr}(\mathcal{L}(\mathbf{p}^{\text{T}}x))\}
+\end{align}
+
+\noin and the optimal solution of the inner minimization problem is 
+\begin{align}
+    x = \text{P}_C(d - \lambda \mathcal{L}(\mathbf{p}))
+\end{align}
+
+\noin where $\mathcal{L}: \mathbb{R}^{(m-1)\times 1} \rightarrow \mathbb{R}^{m\times 1}$ is a linear operator defined by
+\begin{align}
+    \mathcal{L}(\mathbf{p})_{i} = p_i - p_{i-1}, i= 1,\cdots,m-1
+\end{align}
+
+\noin Plugging in the objective function, gradient and step size (which is an upper bound on the Lipschitz constant, and in term depends on the regularization parameter), we can write out the pseudocode for the algorithm, see algorithm.\ref{euclid}. 
+
+\vspace{0.1in}
+
+\noin We found an existing package in python called pyunlocbox \cite{pyunlocbox} to implement the algorithm. This package has all the required components for constructing the functions for data fidelity and regularization terms, and has implemented the FISTA version. 
+
+\begin{algorithm}
+\caption{TV-FISTA}\label{euclid}
+    \begin{algorithmic}
+    \State \textbf{Input} $d$, $A$, $\lambda$, $maxiter$, $tol$
+    \State $r_0 = p_0 = 0_{m-1}$, $t_1 = 1$
+    \If {$i \leq maxiter$}
+    \BState \emph{Forward}
+    \State \textbf{Compute} $x_f = \frac{2}{\lambda}A^{T}(A(x)-d)$
+    \BState \emph{Backward}
+    \State $x_i = x_f - \frac{1}{\lambda} \div x_f$
+    \State $obj = \frac{1}{2}||x_f -x_i ||^2 + \lambda ||\nabla x_i||^2$
+    \State $tol_i = \frac{|tol_{i-1} - tol_i|}{tol_i}$
+    \BState \emph{Update projector}
+    \State $r_i = r - \frac{1}{4 \lambda} \div x_i$
+    \BState \emph{FISTA}
+    \State $t_{i+1} = \frac{1 + \sqrt{1 + 4 t_{i}^2}}{2}$
+    \State $p_i = \frac{r_1}{\text{max}\{1, p_i\}}$
+    \State $r_i = p_i + \frac{t_i -1}{t_i * (p_i - p_{i-1})}$
+    \If {$tol_i \leq tol$}
+        \State \textbf{Stop}
+    \EndIf
+    \State $i = i +1$
+    \EndIf 
+\end{algorithmic}
+\end{algorithm}
+
+\noin Now we discuss other implementation choices in this algorithm. First, we decided to use relative tolerance as our stopping criterion since it is easy to implement and measures the change in value relative to the size of the values themselves. Second, we used L-curve criterion to decide the regularization parameter, because it gives us a principled way to decide the proper amount of regularization without relying on the reference image. 
+
+\vspace{0.2in}
+\noin In general, we made an iterative plan for implementing this algorithm. We started from a series of simple choices, such as optimizing in the image domain with image represented as a row vector (in contrast to wavelet domain), the anisotropic TV, and relative tolerance. While those choices are unsophisticated compare to many advanced tools, we reasoned that we could adjust our implementation choices if the reconstruction quality is poor. To our surprise and delight, the first try of the reconstruction quality is good. We hence adhered to our implementation choices in regularization function and stopping criterion. The detailed reconstruction result will be presented in the result section. 
+\newpage
+\bibliography{ref}{}
+\bibliographystyle{plain}
+\end{document}
