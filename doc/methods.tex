@@ -74,7 +74,7 @@
 
 \noin where
 $x \in \mathbb{R}^{m \times 1}$ is the flattened true image with the size $\sqrt{m \times 1}$.
-$d \in \mathbb{R}^n$ is the flattened sinogram image with the size $\sqrt{n \times 1}$.
+$d \in \mathbb{R}^n$ is the flattened sinogram image where $ |rays|\times|views| = n$.
 $A \in \mathbb{R}^{m \times n}$ is the forward operator that transforms an image to a sinogram image.
 $\lambda$ is the regularization parameter. 
 $\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an anistropic total variation functional, where 
@@ -134,7 +134,7 @@ $\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an anistropic 
     \State $obj = \frac{1}{2}||x_f -x_i ||^2 + \lambda ||\nabla x_i||^2$
     \State $tol_i = \frac{|obj_{i-1} - obj_i|}{obj_i}$
     \BState \emph{Update projector}
-    \State $r_i = r - \frac{1}{4 \lambda} \nabla x_i$
+    \State $r_i = r - \frac{1}{8 \lambda} \nabla x_i$
     \BState \emph{FISTA}
     \State $t_{i+1} = \frac{1 + \sqrt{1 + 4 t_{i}^2}}{2}$
     \State $p_i = \frac{r_1}{\text{max}\{1, p_i\}}$
