@@ -1,0 +1,68 @@
+\documentclass[12pt]{article}
+\usepackage{pdfsync}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{latexsym}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{eucal}
+\usepackage{indentfirst}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsfonts}
+\usepackage{natbib}
+\usepackage{sidecap}
+\usepackage{subfigure}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{gensymb}
+\usepackage{color}
+\usepackage{wrapfig}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage[titletoc]{appendix}
+\usepackage{soul}
+\usepackage{pythontex}
+%\usepackage{ulem}
+\usepackage[body={9.0in, 9.0in},left=1 in,right=1in]{geometry}
+\linespread{1} % interline
+\DeclareGraphicsExtensions{.jpg,.pdf,.mps,.png,.eps}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+%\cfoot{}
+%\chead{}
+%\rhead{\footnotesize 3}
+\newcommand{\noin}{\noindent} 
+
+\begin{document}
+	\section{Introduction}
+	\noin The computed tomography is regarded as one of the most popular imaging modality for the diagnosis of diseases. It involves a series of x-ray projections that are taken at different angles around the patient, generating 2D slices of the 3D organs. The intensity  of the CT images are expressed as \emph{Hounsfield Unit} which is the measure of attenuation of the x-ray through different organs named after it's inventor Dr. Godfrey Hounsfield. The two important parameters considered during the CT projections is the detector setting i.e. the number if rays passing through the patient and the number of angles at which the measurement is taken. The raw data is collected in form of sinogram and they are corrected to remove physical factors. Reconstruction is the mathematical process which transform this corrected projection data into tomographic images. In CT two types of reconstruction techniques are used : Analytical Reconstruction Algorithm and Optimization based Reconstruction Algorithm. For analytical reconstruction we design analytical solution of the inverse problem by understanding the physics of the scanning process. The optimization based reconstruction technique constructs the data fidelity term and minimise it by iterative regularization. 
+	
+	\vspace{0.2in}
+	
+	\noin The Iterative Reconstruction algorithms are based on optimization based regularization. It starts with an initial approximation and compares the approximation to the measured data and optimizes the approximation in the direction of the measured data. The iterative method iterates till the approximation converges to the measured data or it is within the bounds of acceptable threshold of error. The two types of iterative reconstruction widely used are: Algebraic Reconstruction Techniques (eg- ART, SART, SIRT) which reconstruct from the set of projections using linear algebra and Statistical Reconstruction Techniques ( eg- Expectation Maximization) which uses statistical models to reconstruct from projection data. The iterative methods does not need the formulation of the analytical solution. It is robust to minor changes in geometry as it handles missing information implicitly as compared to the analytical methods. Moreover it allows incorporation of prior knowledge to assist the reconstruction. The main challenge for the iterative reconstruction was huge computational time, but with parallel computation and use of GPUs more commercial scanner companies are shifting from the traditional analytical reconstruction to iterative based algorithms.
+	
+	\newpage
+	
+	\section{Problem Formulation and Experimental Details}
+	\noin We designed our CT Reconstruction problem as an optimization problem. The data fidelity term is minimized using least square minimization using Total Variation regularization. 
+	The problem can be formulated as :
+	\begin{align}
+	\underset{x}{min}\{ ||A(x) - d||^2 + 2 \lambda\text{TV}(x)\} \label{eq1}
+	\end{align} 
+	\noin where
+	$x \in \mathbb{R}^{m \times m}$ is the true image that is updated every iteration with the size ${m \times m}$.
+	$d \in \mathbb{R}^{p \times q}$ is the sinogram where no of rays is denoted by $p$ and number of angles the measured is denoted by $q$.
+	$A \in \mathbb{R}^{(m \times m) \times (p \times q)}$ is the forward operator that transforms an image to a sinogram image.
+	$\lambda$ is the regularization parameter. 
+	$\text{TV}(x): \mathbb{R}^{m\times m} \rightarrow \mathbb{R}$  is the total variation functional that updates the image at each iteration.
+	
+	
+	
+	\vspace{0.2in}
+	
+	\noin For our experiment we have used the dimensions of the image as $256 \times 256$. The number of views were the measurement is taken is varied between 540, 270 and 90, while the total number of rays was fixed to 512. We have compared our designed algorithm FISTA with Total Variation with traditional Algebraic Reconstruction methods and with the reference ground truth image. For quantifying the algorithm's performance in terms of reconstruction we used Structural Similarity Index Metric (SSIM) and Mean Square Error.
+	
+	
+	
+\end{document}
