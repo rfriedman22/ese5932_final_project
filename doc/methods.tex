@@ -59,15 +59,19 @@
 
 \section{Methods}
 
-\noin Given the several sources of noise for computed tomography\cite{Duan2013-mi}, such as electronic noise and structural noise, the reconstruction of the CT image is indeed an ill-posed problem. To solve this inverse problem, we formulate the CT image reconstruction as an optimization problem. One of the important considerations for formulating this optimization problem is to find a regularization method that preserves the edges in the true image since identifying boundaries of objects (such as the boundary between normal and abnormal tissues) has high diagnostic value.
+\noin As we know from the physics of computed tomography, the measured sinogram image is convolved with several sources of noise, notably electronic noise and structural noise\cite{Duan2013-mi}. Hence, using an iterative method that handles noise is necessary. In formulating the CT reconstruction as an optimization problem, one of the important considerations is to find a regularization method for the ill-posed problem that preserves the edges in the true image, since identifying boundaries of objects (such as the boundary between normal and abnormal tissues) has high diagnostic value.
 
 \vspace{0.2in}
 
-\noin We decided to follow the fast gradient-based algorithm proposed by Beck and Teboulle \cite{Beck2009-id}, and the following section will discuss the specific implementation of their method for CT image reconstruction. Specifically, we chose the anisotropic TV regularization functional. While anisotropic TV is known to favor horizontal and vertical structures for 2D images\cite{Condat2017-uj}, it simplifies some of the implementation of the algorithm. So the anisotropic TV is implemented as the first path, and the reconstruction quality is good. A decision is made not to implement the isotropic TV functional. 
+\noin We decided to follow the fast gradient-based algorithm proposed by Beck and Teboulle\cite{Beck2009-id}, and the following section will discuss the specific implementation of their method for CT image reconstruction.
 
 \vspace{0.2in}
 
-\noin Hence the optimization problem can be formulated as:
+\noin Specifically, we chose isotropic TV regularization\footnote{In our presentation, we claimed that we were using the anisotropic TV because we falsely assumed that we were optimizing an 1D vector rather than a 2D image. For the 1D case, isotropic and anisotropic TV are essentially the same. The error was resulted from the fact that the majority of the group members are not in the field of imaging science as are unfamiliar with how matlab implicitly handles an image. And the error of assuming a 1D vector resulted in thinking we can use anisotropic TV as well as creating vertical artifacts in reconstructed images, we have corrected the errors in the implementation and rewritten this section. This has been a good learning opportunity for us both in terms of learning new knowledge as well as learning the process of gaining such knowledge from outside of the field. We also attempted to rewrite the method section to increase clarity, we would appreciate any feedback on this version of the description of the method.}. The original publication of FISTA with TV\cite{Beck2009-id} describes two types of TV regularization, anisotropic and isotropic TV, and the specific python package of choice, pyunloc\cite{pyunlocbox}, implements isotropic TV functionals. We decided to use the implemented TV function in the package and conducted some research on the differences of those two types of TV regularization functions. As being described in \cite{Condat2017-uj}, anisotropic TV is known to favor horizontal and vertical structures for 2D images, and isotropic TV is shown to be a superior choice for regularization for a 2D image that preserves the off-axis edges. 
+
+\vspace{0.2in}
+
+\noin The optimization problem can be formulated as:
 \begin{align}
  \underset{x}{min}\{ ||A(x) - d||^2 + 2 \lambda\text{TV}(x)\} \label{eq1}
 \end{align}
@@ -77,7 +81,7 @@ $x \in \mathbb{R}^{m \times 1}$ is the flattened true image with the size $\sqrt
 $d \in \mathbb{R}^n$ is the flattened sinogram image where $ |rays|\times|views| = n$.
 $A \in \mathbb{R}^{m \times n}$ is the forward operator that transforms an image to a sinogram image.
 $\lambda$ is the regularization parameter. 
-$\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an anistropic total variation functional, where 
+$\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an istropic total variation functional, where 
 \begin{align}
     x \in \mathbb{R}^{m\times 1}, \text{TV}(x) = \sum_{i=1}^{m-1}{|x_i - x_{i+1}|} 
 \end{align}
@@ -86,12 +90,14 @@ $\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an anistropic 
 
 \vspace{0.2in}
 
-\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. The first key insight is to apply a orthogonal projection operator on $\text{P}_C$, which is a box projection that maps $x$ onto a feasible set (which can change in each iteration). As discussed in \cite{Beck2009-id}, the solution is
+\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. The first key insight is the construction of the new FISTA term. 
+
+\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. The first key insight is to apply a orthogonal projection operator $\text{P}_C$, which is a box projection that maps $x$ onto a feasible set which ensures the smoothness of the eq.\ref{eq1} in the projected space. As discussed in \cite{Beck2009-id}, the solution is
 \begin{align}
     x_k = \text{P}_C(x_{k-1} - t_k\nabla f(x_{k-1}))
 \end{align}
 
-\noin where $f$ denotes the data fidelity term.
+\noin where $f$ denotes the data fidelity term $\underset{x}{min}\{ ||A(x) - d||^2$.
 
 \vspace{0.2in}
 
