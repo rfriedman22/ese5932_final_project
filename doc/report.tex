@@ -1,0 +1,73 @@
+\documentclass[12pt]{article}
+\usepackage{pdfsync}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{latexsym}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{eucal}
+\usepackage{indentfirst}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsfonts}
+\usepackage{natbib}
+\usepackage{sidecap}
+\usepackage{subfigure}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{gensymb}
+\usepackage{color}
+\usepackage{wrapfig}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage[titletoc]{appendix}
+\usepackage{soul}
+\usepackage{pythontex}
+%\usepackage{ulem}
+\usepackage[body={9.0in, 9.0in},left=1 in,right=1in]{geometry}
+\usepackage{standalone} % for importing other tex files
+\usepackage{titlesec} % for setting section title fonts
+\linespread{1} % interline
+\DeclareGraphicsExtensions{.jpg,.pdf,.mps,.png,.eps}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+%\cfoot{}
+%\chead{}
+%\rhead{\footnotesize 3}
+\newcommand{\noin}{\noindent} 
+
+%%%%%%%%%%%%%Colors%%%%%%%%%%%%%%%
+\usepackage[dvispnames]{xcolor}
+\definecolor{pink}{cmyk}{0, 0.7808, 0.4429, 0.1412}
+%%%%%%%%%%%%% Page setup %%%%%%%%%%
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+%\lhead{\footnotesize \parbox{11cm}{Draft 1} }
+\lfoot{\footnotesize Kaushik Dutta \\ Ryan Friedman \\ Siqi Zhao}
+%\cfoot{}
+%\chead{}
+%\rhead{\footnotesize 3}
+\rfoot{\footnotesize Page \thepage\ of \pageref{LastPage}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Section title setup
+\titleformat*{\section}{\large\bfseries\MakeUppercase}
+\titlespacing\section{0pt}{1.0ex plus -1ex minus -.2ex}{-\parskip}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{ESE 5932 Final Project}
+\date{May 5, 2020}
+\author{Kaushik Dutta \\ Ryan Friedman \\ Siqi Zhao}
+\maketitle
+
+\input{Introduction.tex}
+\input{methods.tex}
+\input{results_discussion.tex}
+
+\bibliography{ref}{}
+\bibliographystyle{plain}
+
+\end{document}
