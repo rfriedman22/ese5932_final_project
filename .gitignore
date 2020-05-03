@@ -1,3 +1,9 @@
 *.ipynb_checkpoints*
 *.idea*
 *pycache*
+doc/*.pdfsync
+doc/*.out
+doc/*.gz
+doc/*.log
+doc/*.pytxcode
+doc/*.aux
