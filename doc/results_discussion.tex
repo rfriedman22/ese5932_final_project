@@ -151,6 +151,8 @@
 \section{Discussion and Conclusions}
 \noin In general, FISTA outperforms SART at reconstructing the image. By comparing reconstructions on the three different sinograms, we see that the SSIM and MSE is substantially more stable with FISTA (Tables~\ref{tab:ssim},~\ref{tab:mse}). Therefore, FISTA creates more robust reconstructions with less data. Although the global SSIM with the full sinogram is slightly higher for SART, this is because FISTA creates a sharper halo effect around the actual image (Figure~\ref{fig:comparisonfull}) likely due to the total variation regularization. Indeed, the SSIM over the ROI is better with FISTA than with SART and we can see that the colors and shading more closely resemble the reference image. The FISTA reconstruction also has sharper edges compared to the SART reconstruction. This is especially apparently as fewer views are used (Figure~\ref{fig:comparison270}). Finally, FISTA is much more tolerant to noise. In the 90 view reconstruction, the SART reconstruction contains wavy patterns whereas the FISTA reconstruction does not contain any noise artifacts (Figure~\ref{fig:comparison90}). As a result, the FISTA reconstruction over the ROI does a much better job preserving the complex structures. In addition, the SART reconstruction appears to have a much noisier, non-uniform background in the ROI.
 
+\vspace{0.2in}
+
 \noin To summarize, we conclude that FISTA creates more robust reconstructions with less data, creates sharper edges, and is more tolerant to noise than stationary iterative methods such as SART.
 
 \section{Author Contributions}
