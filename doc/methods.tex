@@ -24,6 +24,7 @@
 \usepackage[titletoc]{appendix}
 \usepackage{soul}
 \usepackage{pythontex}
+
 %\usepackage{ulem}
 \usepackage[body={9.0in, 9.0in},left=1 in,right=1in]{geometry} % Geometry package for easy page margin setup\setcounter{MaxMatrixCols}{30}
 \linespread{1} % interline
@@ -77,86 +78,96 @@
 \end{align}
 
 \noin where
-$x \in \mathbb{R}^{m \times 1}$ is the flattened true image with the size $\sqrt{m \times 1}$.
-$d \in \mathbb{R}^n$ is the flattened sinogram image where $ |rays|\times|views| = n$.
+$x \in \mathbb{R}^{m \times n}$ is the true image with the size $\sqrt{m \times n}$.
+$d \in \mathbb{R}^{p \times q}$ is the sinogram image where $ p:|rays|\times q:|views|$.
 $A \in \mathbb{R}^{m \times n}$ is the forward operator that transforms an image to a sinogram image.
 $\lambda$ is the regularization parameter. 
-$\text{TV}(x): \mathbb{R}^{m\times 1} \rightarrow \mathbb{R}$  is an istropic total variation functional, where 
+$\text{TV}(x): \mathbb{R}^{m\times n} \rightarrow \mathbb{R}$  is an istropic total variation functional, where 
 \begin{align}
-    x \in \mathbb{R}^{m\times 1}, \text{TV}(x) = \sum_{i=1}^{m-1}{|x_i - x_{i+1}|} 
+    x \in \mathbb{R}^{m\times n}, \text{TV}_{\text{I}}(x) &= \sum_{i=1}^{m-1}\sum_{i=1}^{n-1}\sqrt{(x_{i,j} - x_{i+1,j})^2 + (x_{i,j} - x_{i,j+1})^2} \\
+    &+ \sum_{i=1}^{m-1}{|x_{i,n} - x_{i+1, n}|} + \sum_{i=1}^{n-1}{|x_{m,j} - x_{m, j+1}|}
 \end{align}
 
-\noin To solve the problem in eq.\ref{eq1}, it requires a method that sovles non-differentiable optimization problems. As discussed in \cite{Beck2009-id}, the gradient projection method is particularly suited for this task because of the faster convergence rate compare to other methods such as primal-dual Newton-based methods\cite{Chan1996-mt}. The specific innovation of \cite{Beck2009-id} is a new proximal gradient method called fast iterative shrinkage/thresholding algorithm (FISTA), which has a global convergence rate of $\mathcal{O}(\frac{1}{k^2})$ (The proof of convergence rate is detailed in \cite{Beck2009-id}). 
+\noin To solve the problem in eq.\ref{eq1}, it requires a method that sovles non-differentiable optimization problems. We decided to use fast iterative shrinkage/thresholding algorithm(FISTA) as the algorithm to solve the optimization problem formulated for this project\cite{Beck2009-id}. FISTA has two main advantages: first, it has a global convergence rate of $\mathcal{O}(\frac{1}{k^2})$ (The proof of convergence rate is detailed in \cite{Beck2009-id}); second, FISTA is suitable for dealing with a non-smooth regularization function. 
 
 \vspace{0.2in}
 
-\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. The first key insight is the construction of the new FISTA term. 
-
-\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. The first key insight is to apply a orthogonal projection operator $\text{P}_C$, which is a box projection that maps $x$ onto a feasible set which ensures the smoothness of the eq.\ref{eq1} in the projected space. As discussed in \cite{Beck2009-id}, the solution is
-\begin{align}
-    x_k = \text{P}_C(x_{k-1} - t_k\nabla f(x_{k-1}))
-\end{align}
-
-\noin where $f$ denotes the data fidelity term $\underset{x}{min}\{ ||A(x) - d||^2$.
+\noin The general principle of the algorithm will be discussed in this paragraph and the pseudocode for the specific implementation will follow. 
 
 \vspace{0.2in}
 
-\noin The next step is to construct the proximal map. Let $\mathcal{P}_1$ denote the set of all pairs of matrices $(\mathbf{p}, \mathbf{q})$. Note that for our special case where $x \in \mathbb{R}^{m \times 1}$, $\mathcal{P}_1$ becomes matrices $\mathbf{p}$ satisfying
+\noin We discuss now how FISTA solved the optimization problem in eq.\ref{eq1}. Let $f(x)$ denote the data fidelity term, it is clear that $f(x)$ is smooth and differentiable. The simple iterative method for solving the minimization of $f(x)$ is the gradient descent method:
 \begin{align}
-    |p_i| \leq 1, i = 1,\cdots,m-1
+    x_k = x_{k-1} - t_k \nabla f(x_{k-1})
 \end{align}
 
-\noin Following \emph{Proposition 4.1} in \cite{Beck2009-id}, we can write out the objective function as 
+\noin As stated in \cite{Beck2009-id}, the optimization problem in eq.\ref{eq1} can be considered as a proximal regulation problem of $f(x_k)$ at $x_k$. Skipping the derivation, we have:
 \begin{align}
-\underset{\mathbf{p} \in \mathcal{P}}{max} \underset{x \in \text{C}}{min}\{||x-d|||_\text{F}^2 + 2\lambda\text{Tr}(\mathcal{L}(\mathbf{p}^{\text{T}}x))\}
+    x_k = \underset{x}{\mathrm{argmin}}\{\frac{1}{2t_k}||x - (x_{k-1} - t_k \nabla f(x_{k-1})||^2 + \lambda||x||_{tv}\}
 \end{align}
 
-\noin and the optimal solution of the inner minimization problem is 
+\noin Specifically, for FISTA, each update is:
+
 \begin{align}
-    x = \text{P}_C(d - \lambda \mathcal{L}(\mathbf{p}))
+    x_k &= p_{\text{L}}(y_k) \\
+    t_{k+1} &= \frac{1+ \sqrt{1 + 4 t_k^2}}{2} \\
+    y_{k+1} &= x_k + \frac{t_k -1}{t_{k+1}}(x_k - x_{k-1})
 \end{align}
 
-\noin where $\mathcal{L}: \mathbb{R}^{(m-1)\times 1} \rightarrow \mathbb{R}^{m\times 1}$ is a linear operator defined by
+\noin where $p_{\text{L}} = \underset{x \in \mathbb{E}}{argmin}\{\frac{L}{2} ||x - (y - \frac{1}{L} \nabla f(y)||^2 + ||x||_{tv}\}$
+
+\vspace{0.2in}
+\noin Compare to ISTA, FISTA uses the information from past 2 steps instead of 1 step to decide the new start $x_k$, This smarter choice of $x_k$ allows the proximal gradient approaches the minimum faster. 
+
+\vspace{0.2in}
+
+\noin After establishing FISTA is a fast algorithm for solving the optimization problem in eq.\label{eq1}, we discuss the dual approach to solve for isotropic total variation. The optimal solution for the inner problem is:
+
 \begin{align}
-    \mathcal{L}(\mathbf{p})_{i} = p_i - p_{i-1}, i= 1,\cdots,m-1
+    x_k = P_{\text{C}}(d - \lambda \mathcal{L}(p_k,q_k))
 \end{align}
 
-\noin Plugging in the objective function, gradient and step size (which is an upper bound on the Lipschitz constant, and in term depends on the regularization parameter), we can write out the pseudocode for the algorithm, see algorithm.\ref{euclid}. 
+where linear operator $\mathcal{L} : \mathbb{R}^{((m-1) \times n)}\mathbb{R}^{(m\times (n-1))} \rightarrow \mathbb{R}^{m \times n}$ is defined by 
+\begin{align}
+\mathcal{L}(\mathbf{p},\mathbf{q})_{i,j} = p_{i,j} + q_{i,j} - p_{i-1,j} - &q_{i,j-1}\\
+& i = 1, \cdots, m, j = 1, \cdots, n
+\end{align}
 
-\vspace{0.1in}
+\noin and $P_{\text{C}}$ is an orthogonal projection operator onto a feasible set to ensure smoothness. To apply the dual approach, we need to use the mapping from $(p,q) \rightarrow (r,s)$ to ensure the smoothness. 
 
-\noin We found an existing package in python called pyunlocbox \cite{pyunlocbox} to implement the algorithm. This package has all the required components for constructing the functions for data fidelity and regularization terms, and has implemented the FISTA version. 
+\vspace{0.2in}
+\noin We found an existing package in python called pyunlocbox \cite{pyunlocbox} to implement the algorithm. This package has all the required components for constructing the functions for data fidelity and regularization terms, the pseudocode is in algorithm\ref{euclid}.
 
 \begin{algorithm}
 \caption{TV-FISTA}\label{euclid}
     \begin{algorithmic}
     \State \textbf{Input} $d$, $A$, $\lambda$, $maxiter$, $tol$
-    \State $r_0 = p_0 = 0_{m-1}$, $t_1 = 1$
-    \If {$i \leq maxiter$}
+    \State $(r_0,s_0) = (p_0,q_0) = (0_{(m-1) \times n},0_{m\times (n-1)})$, $t_1 = 1$
+    \If {$k \leq maxiter$}
     \BState \emph{Forward}
-    \State \textbf{Compute} $x_f = \frac{2}{\lambda}A^{T}(A(x)-d)$
+    \State \textbf{Compute} $x_f = \frac{2}{\lambda}A^{T}(A(x_{k-1})-d)$
     \BState \emph{Backward}
-    \State $x_i = x_f - \frac{1}{\lambda} \div x_f$
-    \State $obj = \frac{1}{2}||x_f -x_i ||^2 + \lambda ||\nabla x_i||^2$
-    \State $tol_i = \frac{|obj_{i-1} - obj_i|}{obj_i}$
+    \State $x_k = x_f - \frac{1}{\lambda} \div (r_{k},s_{k})$
+    \State $obj_k = \frac{1}{2}||x_f -x_k ||^2 + \lambda ||\nabla x_k||^2$
+    \State $tol_k = \frac{|obj_{k-1} - obj_k|}{obj_k}$
     \BState \emph{Update projector}
-    \State $r_i = r - \frac{1}{8 \lambda} \nabla x_i$
+    \State $r_{k} = r_{k-1} - \frac{1}{8 \lambda} \frac{\nabla x_k}{\partial p_{k}}$
+    \State $s_{k}= r_{k-1} - \frac{1}{8 \lambda} \frac{\nabla x_k}{\partial q_{k}}$
     \BState \emph{FISTA}
-    \State $t_{i+1} = \frac{1 + \sqrt{1 + 4 t_{i}^2}}{2}$
-    \State $p_i = \frac{r_1}{\text{max}\{1, p_i\}}$
-    \State $r_i = p_i + \frac{t_i -1}{t_i * (p_i - p_{i-1})}$
-    \If {$tol_i \leq tol$}
+    \State $t_{k+1} = \frac{1 + \sqrt{1 + 4 t_{k}^2}}{2}$
+    \State $p_{k} = \frac{r_k}{\text{max}\{1, \sqrt{r_{k}^2 + s_{k}^2 }\}}$
+    \State $q_{k} = \frac{s_k}{\text{max}\{1, \sqrt{r_{k}^2 + s_{k}^2 }\}}$
+    \If {$tol_k \leq tol$}
         \State \textbf{Stop}
     \EndIf
-    \State $i = i +1$
+    \State $k = k +1$
     \EndIf 
 \end{algorithmic}
 \end{algorithm}
 
-\noin Now we discuss other implementation choices in this algorithm. First, we decided to use relative tolerance as our stopping criterion since it is easy to implement and measures the change in value relative to the size of the values themselves. Second, we used L-curve criterion to decide the regularization parameter, because it gives us a principled way to decide the proper amount of regularization without relying on the reference image. 
-
 \vspace{0.2in}
-\noin In general, we made an iterative plan for implementing this algorithm. We started from a series of simple choices, such as optimizing in the image domain with image represented as a row vector (in contrast to wavelet domain), the anisotropic TV, and relative tolerance. While those choices are unsophisticated compare to many advanced tools, we reasoned that we could adjust our implementation choices if the reconstruction quality is poor. To our surprise and delight, the first try of the reconstruction quality is good. We hence adhered to our implementation choices in regularization function and stopping criterion. The detailed reconstruction result will be presented in the result section. 
+
+\noin Now we discuss other implementation choices in this algorithm. First, we decided to use relative tolerance as our stopping criterion since the stability of the proximal gradient can also be used in a similar way as gradient in a first-order optimization problem. Second, we used L-curve criterion to decide the regularization parameter, because it gives us a principled way to decide the proper amount of regularization without relying on the reference image. 
 
 %\bibliography{ref}{}
 %\bibliographystyle{plain}
